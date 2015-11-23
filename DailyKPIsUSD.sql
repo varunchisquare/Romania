@@ -27,6 +27,7 @@ SummaryDate	datetime,
 categry	varchar(200),
 cust_id	int(10),
 cust_username	varchar(50),
+CurrencyCode varchar(20),
 channel_name	varchar(200),
 sport_name	varchar(200),
 class_name	varchar(200),
@@ -55,6 +56,7 @@ settled_date SummaryDate,
 'Sports' categry, 
 cust_id,
 cust_username, 
+'USD',
 channel_name, 
 sport_name, 
 class_name, 
@@ -78,6 +80,9 @@ cast(0.0 as decimal(18,6)) WithdrawCnt,
 cast(0.0 as decimal(18,6)) WithdrawAmt
 from romania.s_customer_pnl
 #where cust_username='entonimobposron2'
+where (total_stake_bccy !=0 or cash_stake_bccy!=0 or cash_out_stake_bccy!=0 or bonus_stake_bccy!=0 or bonus_bal_stake_bccy!=0
+or num_bets!=0 or num_lines!=0 or cash_winnings_bccy!=0 or cash_out_win_bccy!=0 or bonus_winnings_bccy!=0 or cash_winnings_bccy!=0 
+or cash_out_win_bccy!=0 or bonus_winnings_bccy!=0 or combined_profit_bccy)
 group by date(settled_date), cust_id, channel_name,cust_username, 
 sport_name, class_name, type_name, sgl_mult_bet_types_name,is_inplay
 union all
@@ -86,6 +91,7 @@ StatsDate,
 'Casino' categry,
 PlayerCode,
 sp.username, 
+sp.CurrencyCode,
 concat(p.ClientType,' ',p.ClientPlatform) channel_name, 
 'N/A' sport_name,
 'N/A' class_name,
@@ -109,10 +115,11 @@ cast(sum(WITHDRAWCOUNT) as decimal(18,6)) WithdrawCnt,
 cast(sum(WITHDRAWS) as decimal(18,6)) WithdrawAmt
 from romania.c_daily_stats ds
 join romania.c_player sp on ds.playercode = sp.code
-join romania.s_client_parameter p on p.code = ds.ClientparameterCode
+join romania.c_client_parameter p on p.code = ds.ClientparameterCode
 where ds.CasinoCode is not null
 #and sp.username='entonimobposron2'
-group by date(StatsDate),PlayerCode,sp.username,concat(p.ClientType,' ',p.ClientPlatform)
+and (BETS !=0 or BONUSBET!=0 or GAMECOUNT !=0 or WINS !=0 and BONUSWIN != 0 or DEPOSITCOUNT !=0 or DEPOSITS!=0 or WITHDRAWCOUNT!=0 or WITHDRAWS!=0)
+group by date(StatsDate),PlayerCode,sp.username,concat(p.ClientType,' ',p.ClientPlatform),sp.CurrencyCode
 INTO OUTFILE 'C:\\Users\\Public\\Downloads\\romania\\merge.csv'
 FIELDS TERMINATED BY '|' 
 ENCLOSED BY 'NULL'
