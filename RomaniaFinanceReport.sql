@@ -68,3 +68,60 @@ group by playercode,d.DAT_WEEK_DESC_DINTVL_EN
 join frm_f_DailyAccntBalSummary st on st.playercode = mima.PlayerCode and mima.week_st = st.SummaryDate
 join frm_f_DailyAccntBalSummary en on en.playercode = mima.PlayerCode and mima.week_en = en.SummaryDate) ba
 on ov.weekdesc = ba.weekdesc and ov.cust_username = ba.username and ov.CurrencyCode = ba.CurrencyCode;
+
+
+
+--Report 3.1:
+
+select d.DAT_WEEK_DESC_DINTVL_EN weekdesc,username, bo.CurrencyCode,
+min(be_bal),min(be_bo_bal),
+sum(TotalFeed),sum(deposit),sum(Bonus),sum(win),sum(bonuswin),
+sum(TotalOfftake),sum(bet),sum(bonusbet),sum(RemovedBonuses),sum(Withdrawal),max(closing_balance)
+ from 
+(select date(StatsDate) summarydate,username, p.CurrencyCode,sum(GameCount),
+sum(BeginningBalance) be_bal,sum(BeginningBonusBalance) be_bo_bal,
+sum(Bonuses+SportsbookBonuses+Wins+Bonuswin+DEPOSITS+SportsBookWins+AP_WIN) TotalFeed,sum(DEPOSITS) deposit,sum(Bonuses+SportsbookBonuses) Bonus,
+sum(Wins+SportsBookWins+AP_WIN) win,sum(Bonuswin) bonuswin, 
+sum(bets+SportsbookBets+BonusBet+WITHDRAWS+RemovedBonuses+AP_BET) TotalOfftake,sum(bets+SportsbookBets+AP_BET) bet,sum(BonusBet) bonusbet,
+sum(RemovedBonuses) RemovedBonuses,sum(WITHDRAWS) Withdrawal, sum(ds.balance) closing_balance
+from romania.c_daily_stats ds join romania.c_player p on ds.playercode = p.code
+#where playercode=10273013
+group by username,date(StatsDate), p.CurrencyCode) bo
+join d_date d on d.dat_day_Date = bo.summarydate 
+and DATE_ADD(current_date(),INTERVAL -1 Week) between d.DAT_WEEK_BEGIN_DATE_EN and d.DAT_WEEK_end_DATE_EN
+group by d.DAT_WEEK_DESC_DINTVL_EN, CurrencyCode,username
+
+
+--report 3.2
+select bo.username, bo.CurrencyCode,st_en.st_dt,st_en.en_dt,st_en.bbal,st_en.bb_bal,
+sum(TotalFeed)+deposit TotalFeed,deposit,sum(Bonus),sum(win),sum(bonuswin),
+sum(TotalOfftake)+withdraw TotalOfftake,withdraw,sum(bet),sum(bonusbet),sum(RemovedBonuses),st_en.bal closing_balance
+from 
+(select date(StatsDate) summarydate,username,playercode, p.CurrencyCode,sum(GameCount),
+sum(BeginningBalance) be_bal,sum(BeginningBonusBalance) be_bo_bal,
+sum(Bonuses+SportsbookBonuses+Wins+Bonuswin+SportsBookWins+AP_WIN) TotalFeed,sum(Bonuses+SportsbookBonuses) Bonus,
+sum(Wins+SportsBookWins+AP_WIN) win,sum(Bonuswin) bonuswin, 
+sum(bets+SportsbookBets+BonusBet+RemovedBonuses+AP_BET) TotalOfftake,sum(bets+SportsbookBets+AP_BET) bet,sum(BonusBet) bonusbet,
+sum(RemovedBonuses) RemovedBonuses, sum(ds.balance) closing_balance
+from romania.c_daily_stats ds join romania.c_player p on ds.playercode = p.code
+#where playercode=10273013
+group by username,date(StatsDate),playercode, p.CurrencyCode) bo
+join (select prf.username,prf.playercode,prf.st_dt,prf.en_dt,st_ds.bbal,st_ds.bb_bal,en_ds.bal from 
+	(select username,playercode,min(StatsDate) st_dt,max(StatsDate) en_dt
+	from romania.c_daily_stats ds join romania.c_player p on ds.playercode = p.code
+	#where playercode= 10272873 
+	group by username,playercode) prf 
+	join (select playercode,StatsDate,sum(BeginningBalance) bbal,sum(BeginningBonusBalance) bb_bal from romania.c_daily_stats 
+			group by playercode,StatsDate) st_ds on prf.playercode=st_ds.playercode and prf.st_dt = st_ds.StatsDate
+	join (select playercode,StatsDate,sum(Balance) bal from romania.c_daily_stats 
+			group by playercode,StatsDate) en_ds on prf.playercode=en_ds.playercode and prf.en_dt = en_ds.StatsDate) st_en
+		on st_en.username = bo.username
+join (select PlayerCode,
+	sum(case when type = 'deposit' then amount else 0 end) deposit,
+	sum(case when type = 'withdraw' then amount else 0 end) withdraw
+	from romania.c_player_payment 
+	where status = 'approved' 
+	#and PlayerCode=10273988
+	group by PlayerCode) de_wd on bo.playercode = de_wd.playercode        
+group by bo.username, bo.CurrencyCode,st_en.st_dt,st_en.en_dt,st_en.bbal,st_en.bb_bal,st_en.bal,deposit,withdraw
+;
