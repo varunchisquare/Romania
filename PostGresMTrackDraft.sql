@@ -6,7 +6,7 @@ CurrencyCode varchar(20),
 XchangeRate double precision);
 
 insert into romania.frm_F_DailyXchangeRates(SummaryDate,CurrencyCode,XchangeRate) (
-select StatsDate,CurrencyCode,Avg(CurrencyRate) from romania.stg_daily_stats
+select StatsDate,CurrencyCode,Avg(CurrencyRate) from romania.c_daily_stats
 group by StatsDate,CurrencyCode);
 
 drop table romania.frm_F_Daily_Deposit_withdrawal_summary;
@@ -17,17 +17,17 @@ PlayerCode integer,
 Deposit numeric,
 Withdrawal numeric);
 
-insert into romania.frm_F_Daily_Deposit_withdrawal_summary(
-select Summarydate,playercode, 
+
+insert into romania.frm_F_Daily_Deposit_withdrawal_summary(summarydate,PlayerCode,Deposit,Withdrawal) 
+(select Summarydate,playercode, 
 case trtype when 'deposit' then usd_amt else 0 end deposit,
 case trtype when 'withdraw' then usd_amt else 0 end withdrawal from (
-select date(AcceptDate) Summarydate,pp.type trtype,CASHIERTRANID TranCode, METHOD,CurrencyCode, sum(amount) amt, sum(bc_amount) usd_amt,PlayerCode 
-from romania.stg_player_payment pp left outer join romania.stg_player pl on pl.code = pp.playercode
+select date(AcceptDate) Summarydate,pp.type trtype,CASHIERTRANID TranCode, METHOD,CurrencyCode, sum(amount) amt, sum(bc_amount) usd_amt,pp.PlayerCode
+from romania.c_player_payment pp left outer join romania.c_player pl on pl.code = pp.playercode
 where pp.status = 'approved' and pp.type in ('withdraw','deposit')
-group by date(AcceptDate),CASHIERTRANID,METHOD,CurrencyCode,PlayerCode,pp.type) ab);
+group by date(AcceptDate),CASHIERTRANID,METHOD,CurrencyCode,pp.PlayerCode,pp.type) ab);
 
-
-
+drop table romania.frm_F_Player_Deposit_Withdrawal_Attempt;
 create table romania.frm_F_Player_Deposit_Withdrawal_Attempt (
 ID  SERIAL PRIMARY KEY,
 PlayerCode integer,
@@ -37,15 +37,13 @@ method character varying,
 status character varying,
 Amount numeric,
 bc_amount numeric,
-MerchantAnswer character varying,
 extraMerchantInfo character varying);
 
 truncate table romania.frm_F_Player_Deposit_Withdrawal_Attempt;
 insert into romania.frm_F_Player_Deposit_Withdrawal_Attempt(
-PlayerCode,requestdate,type,method,status,Amount,bc_amount,MerchantAnswer,extraMerchantInfo) 
-(select playercode,requestdate,type,method, status,amount,bc_amount, 
-merchantanswer,extramerchantinfo
-from romania.stg_player_payment ab
+        PlayerCode,requestdate,type,method,status,Amount,bc_amount,extraMerchantInfo) 
+(select playercode,requestdate,type,method,status,amount,bc_amount,extramerchantinfo
+from romania.c_player_payment ab
 order by 1,3,2);
 
 drop table romania.frm_F_Player_Deposit_Withdrawal_Status;
@@ -59,13 +57,12 @@ method character varying,
 status character varying,
 Amount numeric,
 bc_amount numeric,
-MerchantAnswer character varying,
 extraMerchantInfo character varying);
 
 insert into romania.frm_F_Player_Deposit_Withdrawal_Status(
-rnk,PlayerCode,requestdate,type,method,status,Amount,bc_amount,MerchantAnswer,extraMerchantInfo) (
+rnk,PlayerCode,requestdate,type,method,status,Amount,bc_amount,extraMerchantInfo) (
 select (ab.id-abc.id )+1 seq, ab.playercode,ab.requestdate,ab.type,ab.method,ab.status,ab.amount,ab.bc_amount,
-ab.MerchantAnswer,ab.extraMerchantInfo
+ab.extraMerchantInfo
 from romania.frm_F_Player_Deposit_Withdrawal_Attempt ab
 join (select playerCode,type,min(id) id from romania.frm_F_Player_Deposit_Withdrawal_Attempt
 group by playerCode,type) abc on ab.playercode = abc.playercode and ab.type = abc.type);
@@ -81,7 +78,7 @@ select pl.code playerCode
 ,wdr.Tran06 wTran06,wdr.Tran07 wTran07,wdr.Tran08 wTran08,wdr.Tran09 wTran09,wdr.Tran10 wTran10
 ,wdr.Tran11 wTran01,wdr.Tran12 wTran12,wdr.Tran13 wTran13,wdr.Tran14 wTran14,wdr.Tran15 wTran15
 ,wdr.Tran16 wTran16,wdr.Tran17 wTran17,wdr.Tran18 wTran18,wdr.Tran19 wTran19,wdr.Tran20 wTran20
-from romania.stg_player pl 
+from romania.c_player pl 
 left outer join (select playercode,
 max(Tran01) Tran01, max(Tran02) Tran02, max(Tran03) Tran03, max(Tran04) Tran04, max(Tran05) Tran05, 
 max(Tran06) Tran06, max(Tran07) Tran07, max(Tran08) Tran08, max(Tran09) Tran09, max(Tran10) Tran10, 
@@ -112,7 +109,7 @@ select playercode
 from (
 select ab.rnk,playercode,requestdate,type,method,case status when 'approved' then 'A' else 'D' end status,amount,bc_Amount
  from romania.frm_F_Player_Deposit_Withdrawal_Status ab 
- where type= 'withdraw' --and playercode= 10272896
+ where type= 'withdraw' --and playercode= 10274098
 ) pq) abc group by playercode ) wdr on wdr.playercode = pl.code
 left outer join
 (select playercode,
@@ -145,8 +142,9 @@ select playercode
 from (
 select ab.rnk,playercode,requestdate,type,method,case status when 'approved' then 'A' else 'D' end status,amount,bc_Amount
  from romania.frm_F_Player_Deposit_Withdrawal_Status ab 
- where type= 'withdraw' --and playercode= 10272896
-) pq) abc group by playercode ) dep on dep.playercode = pl.code;
+ where type= 'deposit' --and playercode= 10274098
+) pq) abc group by playercode ) dep on dep.playercode = pl.code
+order by 1 ;
 
 ---select * from romania.sp_customer pl
 select dat_day_date,gm.cust_id,gm.num_bets
