@@ -1,26 +1,26 @@
 use romania;
 drop table romania.frm_f_DailyAccntBalSummary;
 create table romania.frm_f_DailyAccntBalSummary (
-summarydate date,
-playercode int(10),
+SummaryDate date,
+PlayerCode int(10),
 PlayerType varchar(50),
-startbalance decimal(18,6),
-startbonus_balance decimal(18,6),
-endbalance decimal(18,6),
-endbonus_balance decimal(18,6) 
+StartBalance decimal(18,6),
+StartBonusBalance decimal(18,6),
+EndBalance decimal(18,6),
+EndBonusBalance decimal(18,6) 
 ) ENGINE=BRIGHTHOUSE DEFAULT CHARSET=utf8;
 
 drop table romania.stg_login_across;
 CREATE TABLE romania.stg_login_across (
-   summarydate date default null,
-   playercode int(10) DEFAULT NULL,
+   SummaryDate date default null,
+   PlayerCode int(10) DEFAULT NULL,
    PlayerType varchar(50) DEFAULT NULL,
-   logindate datetime DEFAULT NULL,
-   logoutdate datetime DEFAULT NULL,
-   startbalance decimal(18,6) DEFAULT NULL,
-   startbonusbalance decimal(18,6) DEFAULT NULL,
-   endbalance decimal(18,6) DEFAULT NULL,
-   endbonusbalance decimal(18,6) DEFAULT NULL
+   LoginDate datetime DEFAULT NULL,
+   LogoutDate datetime DEFAULT NULL,
+   StartBalance decimal(18,6) DEFAULT NULL,
+   StartBonusBalance decimal(18,6) DEFAULT NULL,
+   EndBalance decimal(18,6) DEFAULT NULL,
+   EndBonusBalance decimal(18,6) DEFAULT NULL
  ) ENGINE=BRIGHTHOUSE DEFAULT CHARSET=utf8;
 
 /* filling the gaps (for those session that did not end the same day 
@@ -47,13 +47,12 @@ case when d.DAT_DAY_DATE = date(logindate)  then logindate  else str_to_date(con
 case when d.DAT_DAY_DATE = date(logoutdate) then logoutdate else str_to_date(CONCAT(DATE_FORMAT(d.DAT_DAY_DATE,'%Y-%m-%d'),' 23:59:58'),'%Y-%m-%d %H:%i:%s')  end as logoutdate,
 case when d.DAT_DAY_DATE = date(logindate) then startbalance else endbalance end as startbalance,
 case when d.DAT_DAY_DATE = date(logindate) then startBonusbalance else endBonusbalance end as startBonusbalance,
-endbalance,
-endBonusbalance 
+endBalance,
+endBonusBalance 
 from 
 (select sessionId,lo1.playercode,lo1.logindate,lo1.logoutdate,lo1.startbalance,lo1.endbalance,lo1.startbonusbalance,lo1.endbonusbalance,playertype
 from romania.c_logins lo1 where date(lo1.LoginDate) != date(lo1.logoutdate) 
-#and playercode=10274444
-#and playercode=10273358
+#and playercode=10275515
 ) sa 
 join romania.d_date d on d.dat_Day_Date between date(sa.logindate) and date(sa.logoutdate)
 where d.dat_day_date >= '2015-08-01' and d.dat_day_Date < current_date
@@ -71,7 +70,7 @@ LINES TERMINATED BY '\r\n';
 
 /*recording day's start and end balance for the day for a player when login and logout belongs to the same calendar date*/
 select distinct date(st1.LoginDate) summdate,st1.PlayerCode,st1.PlayerType,st1.LoginDate,en1.LogoutDate,st1.Startbalance,
-st1.Startbonusbalance,en1.EndBalance,en1.EndBonusBalance
+st1.StartbonusBalance,en1.EndBalance,en1.EndBonusBalance
 from 
 (select lo.LoginDate,lo.PlayerCode,lo.PlayerType,lo.Startbalance,lo.Startbonusbalance
 from romania.c_logins lo
@@ -125,14 +124,5 @@ FIELDS TERMINATED BY ';'
 ENCLOSED BY 'NULL'
 LINES TERMINATED BY '\r\n';
 
-#weekly player balance
-select mima.playercode,mima.weekdesc, st.startbalance, en.endbalance
-from 
-(select playercode,d.DAT_WEEK_DESC_DINTVL_EN weekdesc, min(SummaryDate) week_St, max(SummaryDate) week_en
-from frm_f_DailyAccntBalSummary  bal
-join d_date d on d.dat_day_Date = bal.summarydate 
-	and DATE_ADD(current_date(),INTERVAL -4 Week) between d.DAT_WEEK_BEGIN_DATE_EN and d.DAT_WEEK_end_DATE_EN
-#where bal.playercode= 10273383
-group by playercode,d.DAT_WEEK_DESC_DINTVL_EN) mima
-join frm_f_DailyAccntBalSummary st on st.playercode = mima.PlayerCode and mima.week_st = st.SummaryDate
-join frm_f_DailyAccntBalSummary en on en.playercode = mima.PlayerCode and mima.week_en = en.SummaryDate;
+
+select * from romania.frm_f_DailyAccntBalSummary where playercode=10275515
