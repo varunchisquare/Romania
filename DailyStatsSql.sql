@@ -62,3 +62,9 @@ and date(Effectivedaten)=DATE_SUB(current_date, INTERVAL 1 DAY)) e join
 where CurrencyCode = 'RON'
 and date(Effectivedaten)=DATE_SUB(current_date, INTERVAL 1 DAY)) r on r.da= e.da) ra on ra.da = ba.da) ove;
 
+select da,count(distinct username) overalluap from (
+select date(gamedate) da,username from romania.c_games g join romania.c_player p on g.playercode = p.code
+union
+select date(DATE_SUB(settled_date, INTERVAL 2 HOUR)) da, cust_username from romania.s_customer_pnl) OAUAP
+where da > '2015-11-25'
+group by da;
