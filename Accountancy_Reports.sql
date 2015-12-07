@@ -55,7 +55,9 @@ and sb.Status = 'Redeemed'
 and date (p.signupdate) >= '2015-11-26'
 group by date(date_started_triggers),cust_ccy_code
 union
-select 'CAS' prd, date(requestdate) summdate,p.currencycode,sum(amount) offered,sum(case when  RequestDate is not null then Amount else 0 end) redeemed
+select 'CAS' prd, date(requestdate) summdate,p.currencycode,
+sum(case when  RequestDate is not null then Amount else 0 end) offered,
+sum(case when  RequestDate is not null and AcceptDate is not null and RedeemDate is not null then Amount else 0 end) redeemed
 from romania.c_pending_bonus b, romania.c_player p
 where b.playercode = p.code::character varying
 and date(p.signupdate) >='2015-11-26'
