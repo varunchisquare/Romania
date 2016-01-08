@@ -64,3 +64,5 @@ and date(p.signupdate) >='2015-11-26'
 group by date(requestdate),p.currencycode) bon
 group by da, currencycode
 order by 1;
+
+
