@@ -19,14 +19,11 @@ left outer join romaniastg.advertisers ad on ns.affiliate = ad.username) adv on 
 left outer join (SELECT PlayerId,sum(TotalDepApproveAmt) TotalDepApproveAmt 
 FROM romaniamain.sd_daily_cashier_summary
 group by PlayerId) as cas on cas.PlayerId = p.playerid 
-left outer join (select PlayerId,sum(SPCashStakeAmt+EGCashBet) TotalCashStake
+left outer join (select PlayerId,sum(SPCashStakeAmt) TotalCashStake
 from romaniamain.sd_cv_daily_player_summary
 group by PlayerId) as b on b.PlayerId = p.playerid
 where p.signupdate >= '2015-11-26'
-#and cas.TotalDepApproveAmt >= 50
-#and b.TotalCashStake >= 150
 ) ov
-#where advcode=125186
 where lower(advEmail) = 'agentii@efortuna.ro'
 group by advcode,advEmail,advChannel,advUsername
 order by 5 desc;
