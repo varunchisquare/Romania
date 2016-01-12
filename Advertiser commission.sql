@@ -1,11 +1,12 @@
 select advcode, advEmail,advChannel,advUsername,
-count(CountablePlyrs) totalPlayers,    
+count(CountablePlyrs) TotalPlayers,    
+count(ftd) PlayersWithFTD,
 sum(CountablePlyrs) ConvertedPlayers,
 case when sum(CountablePlyrs) = 6 then 50
 	 when sum(CountablePlyrs) < 6 then 0
      when sum(CountablePlyrs) > 6 then  (sum(CountablePlyrs)-6)*10 + 50 end totalCommission 
 from 
-(select p.PlayerID,p.username,adv.email advEmail,advUsername,
+(select p.PlayerID,p.GlobalFirstDepositDate ftd,p.username,adv.email advEmail,advUsername,
 case when lower(adv.email) = 'agentii@efortuna.ro' then 'RETAIL'
 when lower(adv.email) like 'iulian.dumitru@efortuna.ro' or lower(adv.email) like 'superpont1x2@gmail.com' then 'DIGITAL'
 when lower(adv.email) like 'defaulte8' then 'Generic'
@@ -21,10 +22,12 @@ group by PlayerId) as cas on cas.PlayerId = p.playerid
 left outer join (select PlayerId,sum(SPCashStakeAmt+EGCashBet) TotalCashStake
 from romaniamain.sd_cv_daily_player_summary
 group by PlayerId) as b on b.PlayerId = p.playerid
-#where cas.TotalDepApproveAmt >= 50
+where p.signupdate >= '2015-11-26'
+#and cas.TotalDepApproveAmt >= 50
 #and b.TotalCashStake >= 150
 ) ov
 #where advcode=125186
+where lower(advEmail) = 'agentii@efortuna.ro'
 group by advcode,advEmail,advChannel,advUsername
 order by 5 desc;
 
