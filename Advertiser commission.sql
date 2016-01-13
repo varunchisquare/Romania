@@ -14,7 +14,7 @@ else 'AFFILIATE' end advChannel,advCode,  cas.TotalDepApproveAmt, b.TotalCashSta
 case when cas.TotalDepApproveAmt >= 50 and b.TotalCashStake >= 150 then 1 else 0 end CountablePlyrs
 from romaniastg.stg_ims_player p
 left outer join (select ns.username,coalesce(ad.email,affiliate) email, ad.code advCode, ad.username advUsername
-from romaniastg.new_signup ns
+from romaniastg.IMS_newSignup ns
 left outer join romaniastg.advertisers ad on ns.affiliate = ad.username) adv on (adv.username = p.username)
 left outer join (SELECT PlayerId,sum(TotalDepApproveAmt) TotalDepApproveAmt 
 FROM romaniamain.sd_daily_cashier_summary
