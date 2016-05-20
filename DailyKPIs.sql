@@ -1,3 +1,7 @@
+##Date changes: 2016-Feb-02
+##rename files 
+##Full Run
+use romania;
 drop table `romania`.`c_player`;
 CREATE TABLE `romania`.`c_player` (
    `ACCUMULATEDBETREFUND` int(10) DEFAULT NULL,
@@ -16,7 +20,7 @@ CREATE TABLE `romania`.`c_player` (
    `ALLBETSINCLUDED` varchar(20) DEFAULT NULL,
    `AUTHENTICATIONPHONE` varchar(20) DEFAULT NULL,
    `AUTHENTICATIONPHONEPIN` varchar(20) DEFAULT NULL,
-   `BALANCE` varchar(20) DEFAULT NULL,
+   `BALANCE` decimal(18,6) DEFAULT NULL,
    `BALANCEVERSION` varchar(20) DEFAULT NULL,
    `BANNERID` varchar(20) DEFAULT NULL,
    `BC_BALANCE` varchar(20) DEFAULT NULL,
@@ -215,11 +219,9 @@ CREATE TABLE `romania`.`c_player` (
    `ZIP` varchar(20) DEFAULT NULL
  ) ENGINE=BRIGHTHOUSE DEFAULT CHARSET=utf8;
 
-LOAD DATA INFILE 'D:\\2016\\Jan-2016\\10-Jan-2016\\CURL_-_Players_10-01-2016.csv' 
+LOAD DATA INFILE 'D:\\2016\\Feb-2016\\2016-Feb-02\\CURL_Players_2016-Feb-02.csv' 
 INTO TABLE romania.c_player
-FIELDS TERMINATED BY ',' 
-OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\r\n';
+FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '\r\n';
 
 drop table romania.c_games;
 CREATE TABLE `romania`.`c_games` (
@@ -277,11 +279,9 @@ CREATE TABLE `romania`.`c_games` (
    `WindowCode` int(11) DEFAULT NULL
  ) ENGINE=BRIGHTHOUSE DEFAULT CHARSET=utf8;
  
-LOAD DATA INFILE 'D:\\2016\\Jan-2016\\10-Jan-2016\\CURL_-_Games_10-01-2016.csv' 
+LOAD DATA INFILE 'D:\\2016\\Feb-2016\\2016-Feb-02\\CURL_Games_2016-Feb-02.csv' 
 INTO TABLE romania.c_games
-FIELDS TERMINATED BY ',' 
-OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\r\n';
+FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '\r\n';
 
 drop table romania.s_customer_pnl;
 CREATE TABLE `romania`.`s_customer_pnl` (
@@ -329,16 +329,14 @@ CREATE TABLE `romania`.`s_customer_pnl` (
    `void_in_play_prop` decimal(18,6) DEFAULT NULL
  ) ENGINE=BRIGHTHOUSE DEFAULT CHARSET=utf8;
  
-LOAD DATA INFILE 'D:\\2016\\Jan-2016\\10-Jan-2016\\Customer_P_L_Viewer.csv' 
+LOAD DATA INFILE 'D:\\2016\\Feb-2016\\2016-Feb-02\\Customer_P_L_Viewer.csv' 
 INTO TABLE romania.s_customer_pnl
-FIELDS TERMINATED BY ',' 
-OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\r\n';
+FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '\r\n';
 
 drop table romania.stg_transaction_info;
 Create table romania.stg_transaction_info(
 Code int(10),
-Username varchar(50),
+Username varchar(100),
 Casino varchar(50),
 Merchant varchar(50),
 Clienttype varchar(50),
@@ -357,33 +355,13 @@ Submethod varchar(50),
 Reason varchar(4000)
 ) ENGINE=BRIGHTHOUSE DEFAULT CHARSET=utf8;
 
-LOAD DATA INFILE 'D:\\2016\\Jan-2016\\10-Jan-2016\\Transactions_information.csv' 
+LOAD DATA INFILE 'D:\\2016\\Feb-2016\\2016-Feb-02\\Transactions_information.csv' 
 INTO TABLE stg_transaction_info
-FIELDS TERMINATED BY ',' 
-ENCLOSED BY '"'
-LINES TERMINATED BY '\r\n';
+FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\r\n';
 
-select 
-Code,
-Username,
-Casino,
-Merchant,
-Clienttype,
-Ppcode,
-Type,
-Status ,
-Requestdate,
-date(Requestdate),
-month(Requestdate),
-year(Requestdate),
-Currencycode ,
-Amount,
-Bc_amount ,
-Balance ,
-Bc_balance ,
-Method ,
-Paypaltranid ,
-Submethod ,
+select Code,Username,Casino,Merchant,Clienttype,Ppcode,Type,Status ,Requestdate,
+date(Requestdate),month(Requestdate),year(Requestdate),Currencycode ,Amount,
+Bc_amount ,Balance ,Bc_balance ,Method ,Paypaltranid ,Submethod ,
 case when Status = 'approved' then 'NotDeclined'
 	 when Status = 'declined' and lower(Reason) like '%invalid%' and lower(Reason) like '%card%' then 'InvalidCardDetails'
  when Status = 'declined' and lower(Reason) like '%ndeclined%' and lower(Reason) like '%prctime%' then 'NDeclinedPrcTime'
@@ -412,10 +390,8 @@ case when Status = 'approved' then 'NotDeclined'
  when Status = 'declined' and lower(Reason) like '%generic_error%' and lower(Reason) like '%user%' and lower(Reason) like '%cancelation%' then 'UserCancelled'
  when Status = 'declined' and lower(Reason) like '%567%' then 'SC_FS_Declined'
  else 'NA' end as DeclinedReason
-INTO OUTFILE 'D:\\2016\\Jan-2016\\10-Jan-2016\\daily_player_transactions.csv'
-FIELDS TERMINATED BY ',' 
-ENCLOSED BY 'NULL'
-LINES TERMINATED BY '\n'
+INTO OUTFILE 'D:\\2016\\Feb-2016\\2016-Feb-02\\daily_player_transactions.csv'
+FIELDS TERMINATED BY ',' ENCLOSED BY 'NULL' LINES TERMINATED BY '\n'
 from stg_transaction_info as txn;
 
 drop table romania.daily_player_transactions;
@@ -443,11 +419,9 @@ Submethod varchar(50),
 DeclinedReason varchar(500)
 ) ENGINE=BRIGHTHOUSE DEFAULT CHARSET=utf8;
 
-LOAD DATA INFILE 'D:\\2016\\Jan-2016\\10-Jan-2016\\daily_player_transactions.csv' 
+LOAD DATA INFILE 'D:\\2016\\Feb-2016\\2016-Feb-02\\daily_player_transactions.csv' 
 INTO TABLE romania.daily_player_transactions
-FIELDS TERMINATED BY ',' 
-ENCLOSED BY 'NULL'
-LINES TERMINATED BY '\r\n';
+FIELDS TERMINATED BY ',' ENCLOSED BY 'NULL' LINES TERMINATED BY '\r\n';
 
 select sgn.da, sgn.Signups, ftd.ftds,oa.oa OverallUAP,bal.bal,cas.UAP,cas.bet, 
 cas.win,cas.bonusbet,cas.bonuswin,cas.jackpotbet,cas.jackpotwin, ' ' bonusRedeemed,
@@ -466,7 +440,8 @@ from romania.c_player p where date(p.signupdate) >= '2015-11-26'
 and date(p.globalfirstdepositdate) = date_add(current_date, INTERVAL -1 Day)
 group by date(p.globalfirstdepositdate)) ftd,
 (select currencycode cy, sum(balance) bal
-from romania.c_player p where date(p.signupdate) >= '2015-11-26' and balance > 0
+from romania.c_player p where date(p.signupdate) >= '2015-11-26' 
+and balance > 0.0
 group by currencycode) bal,
 (select date(g.gamedate) summdate,p.currencycode cy, count(distinct p.username) uap, 
 sum(bet) bet,sum(win) win, sum(bonusbet) bonusbet, sum(bonuswin) bonuswin,sum(jackpotbet) jackpotbet, sum(jackpotwin) jackpotwin
@@ -501,8 +476,6 @@ and date(date_add(settled_date, INTERVAL -2 Hour)) = date(date_add(current_date,
 and sp.cust_username = p.username 
 group by p.currencycode,is_inplay,date(date_add(settled_date, INTERVAL -2 Hour))) sp
 group by currencycode) spo,
-#(select oa.oa OverallUAP,cas.cas CasinoUAP,sp.sp SportsUAP
-#from 
 (select 1 a, count(distinct username) oa from (
 select distinct username from romania.c_games g, romania.c_player p where p.code = g.playercode and date(p.signupdate) >= '2015-11-26'
 union
@@ -513,3 +486,75 @@ select distinct cust_username from romania.s_customer_pnl sp ,romania.c_player p
 
 select *
 from romania.daily_player_transactions;
+
+/*
+select date(g.gamedate) summdate,p.currencycode cy, count(distinct p.username) uap, 
+sum(bet) bet,sum(win) win, sum(bonusbet) bonusbet, sum(bonuswin) bonuswin,sum(jackpotbet) jackpotbet, sum(jackpotwin) jackpotwin
+from romania.c_games g, romania.c_player p 
+where #date(p.signupdate) >= '2015-11-26' and 
+p.code = g.playercode
+and date(g.gamedate) = date(date_add(current_date, INTERVAL -1 Day));
+
+select code,currencycode cy, balance bal
+from romania.c_player p where date(p.signupdate) >= '2015-11-26' 
+and balance > 0
+#group by currencycode
+*/
+
+
+/*select code, balance , BONUSBALANCE
+from romania.c_player p where date(p.signupdate) >= '2015-11-26' 
+and balance < BONUSBALANCE */
+#group by currencycode
+
+/*select date(g.gamedate) summdate,p.currencycode cy, count(distinct p.username) uap, 
+sum(bet) bet,sum(win) win, sum(bonusbet) bonusbet, sum(bonuswin) bonuswin,sum(jackpotbet) jackpotbet, sum(jackpotwin) jackpotwin
+from romania.c_games g, romania.c_player p where date(p.signupdate) >= '2015-11-26' and p.code = g.playercode
+and date(g.gamedate) = date_add(current_date, INTERVAL -1 Day)
+group by date(g.gamedate),p.currencycode*/
+
+
+/*
+#kpi from rep-layer
+select SummaryDate, count(distinct eg.playerID) uap,sum(cashbet+BonusBet),sum(CashWin+BonusWin),sum(BonusBet),sum(BonusWin),sum(JackpotBet),sum(JackpotWin)
+from romaniamain.fd_csc_eg_player_product_info_summ eg
+join romaniamain.dim_player p on eg.PlayerId = p.PlayerId and p.SignupDate>='2015-11-26'
+#where SummaryDate='2016-01-06'
+group by 1
+order by 1;
+
+
+select summdate,sum(cash_Stake) CashStake,sum(cash_winnings) cash_winnings,
+sum(bonus_Stake) bonus_Stake,sum(Bonus_winnings) Bonus_winnings,
+sum(cash_out_stake) cash_out_stake,sum(Cash_out_win) Cash_out_win,
+sum(num_bets) num_bets,sum(stake_refunded) stake_refunded,  
+sum(case is_inplay when 'N' then cash_Stake else 0 end) 	CashStakePre,
+sum(case is_inplay when 'N' then cash_winnings else 0 end) 	cash_winningsPRe,
+sum(case is_inplay when 'N' then bonus_Stake else 0 end) 	bonus_StakePre,
+sum(case is_inplay when 'N' then Bonus_winnings else 0 end) Bonus_winningsPre,
+sum(case is_inplay when 'N' then cash_out_stake else 0 end) cash_out_stakePre,
+sum(case is_inplay when 'N' then Cash_out_win else 0 end) 	Cash_out_winPre,
+sum(case is_inplay when 'N' then num_bets else 0 end) 		num_betsPre,
+sum(case is_inplay when 'Y' then cash_Stake else 0 end) 	CashStakeLive,
+sum(case is_inplay when 'Y' then cash_winnings else 0 end) 	cash_winningsLive,
+sum(case is_inplay when 'Y' then bonus_Stake else 0 end) 	bonus_StakeLive,
+sum(case is_inplay when 'Y' then Bonus_winnings else 0 end) Bonus_winningsLive,
+sum(case is_inplay when 'Y' then cash_out_stake else 0 end) cash_out_stakeLive,
+sum(case is_inplay when 'Y' then Cash_out_win else 0 end) 	Cash_out_winLive,
+sum(case is_inplay when 'Y' then num_bets else 0 end) 		num_betsLive,
+currencycode cy from (
+select date(date_add(SettledDate, INTERVAL -2 Hour)) summdate,p.currencycode,LiveYN is_inplay,
+sum(CashStake) cash_Stake,sum(CashWinnings) cash_winnings, sum(BonusStake) bonus_Stake, sum(BonusWinnings) Bonus_winnings,
+sum(CashOutStake) cash_out_stake,  sum(CashOutWin) Cash_out_win, sum(NumBets) num_bets,sum(StakeRefunded) stake_refunded
+from romaniamain.customer_pnl sp join romaniamain.dim_player p on p.username = sp.Username
+where date(p.signupdate) >= '2015-11-26'
+#and date(date_add(SettledDate, INTERVAL -2 Hour)) = date(date_add(current_date, INTERVAL -1 Day))
+and sp.Username = p.username 
+group by p.currencycode,LiveYN,date(date_add(SettledDate, INTERVAL -2 Hour))) sp
+group by summdate,currencycode
+order by 1 ;
+
+
+select distinct SummaryDate from romaniamain.fd_csc_eg_player_product_info_summ order by 1;
+*/
+
